@@ -1,8 +1,6 @@
 import requests
-from bs4 import BeautifulSoup
-import time
-from random import random
 from fake_useragent import UserAgent
+from bs4 import BeautifulSoup
 import re
 import pandas as pd
 
@@ -16,33 +14,17 @@ def get_data(url):
     r = requests.get(url, headers=headers)
     r.raise_for_status()
     content = r.content
+
     soup = BeautifulSoup(content, 'html.parser')
-    ps = soup.findAll('div', attrs={'class': 'item_total_price'})
-    ns = soup.findAll('a', attrs={'class': 'item_name no_desc'})
-    lk = soup.findAll('a', attrs={'class': "listing_item_button cta_button"})
-    names = []
-    prices = []
-    links = []
-    if ps is not None and ns is not None:
-        for name in ns:
-            if name is not None:
-                names.append(name.text.strip())
-            else:
-                names.append("unknown-product")
-
-        for price in ps:
-            if price is not None:
-                prices.append(re.findall(r'\d+,\d+', price.text.strip())[0])
-            else:
-                prices.append("unknown-price")
-
-        for link in lk:
-            if link is not None:
-                links.append("https://trovaprezzi.it" + link.attrs['href'])
-            else:
-                prices.append("unknown-link")
-
-    df = pd.DataFrame({'name': names, 'price': prices, 'link': links})
+    prices = soup.findAll('div', attrs={'class': 'item_total_price'})
+    names = soup.findAll('a', attrs={'class': 'item_name no_desc'})
+    links = soup.findAll('a', attrs={'class': "listing_item_button cta_button"})
+    if prices is not None and names is not None and links is not None:
+        df = pd.DataFrame({'name': names, 'price': prices, 'link': links})
+        for index, product in df.iterrows():
+            product['name'] = product['name'].text.strip()
+            product['price'] = re.findall(r'\d+,\d+', product['price'].text.strip())[0]
+            product['link'] = ("https://trovaprezzi.it" + product['link'].attrs['href'])
     return df
 
 
