@@ -1,5 +1,5 @@
 import logging
-from scraper import get_data
+from scraper import get_data, print_data_ordered
 import os
 
 from telegram import ReplyKeyboardMarkup, Update
@@ -111,14 +111,15 @@ def show_products(update: Update, context: CallbackContext) -> int:
         )
     else:
         for link in context.user_data.get('links'):
-            text = get_data(link)
+            df = get_data(link)
+            text = print_data_ordered(df, link)
             update.message.reply_text(text)
         make_choise(update, context)
     return CHOOSING
 
 
 def make_choise(update: Update, context: CallbackContext) -> int:
-    update.message.reply_text('What do you want to do?',
+    update.message.reply_text('How do you want to continue?',
                               reply_markup=markup)
     return CHOOSING
 
